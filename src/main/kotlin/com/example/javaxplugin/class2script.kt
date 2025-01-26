@@ -5,6 +5,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.comments.Comment
+import java.lang.RuntimeException
 
 data class RunMethodInfo(
         val parameters: List<ParameterInfo>,
@@ -27,6 +28,26 @@ data class ParameterInfo(
         val comment: String = ""
 )
 
+
+object Class2ScriptConverter {
+    fun converter(javaCode: String): String {
+        val runMethodInfo = JavaCodeParser.parseRunMethod(javaCode) ?: throw RuntimeException("没有解析出run方法的内容")
+
+        val paramsCode = runMethodInfo.parameters.joinToString("\n") { param ->
+            if (param.comment.isNotBlank()) {
+                "${param.type} ${param.name} = ${param.comment}" // 带注释的参数初始化
+            } else {
+                "${param.type} ${param.name} = (${param.type}) **${param.name}" // 默认类型转换初始化
+            }
+        }
+        return """
+$paramsCode
+            
+${runMethodInfo.methodBody}
+        """.trimIndent()
+    }
+}
+
 object JavaCodeParser {
 
     /**
@@ -41,8 +62,7 @@ object JavaCodeParser {
                     .firstOrNull { isValidRunMethod(it) }
                     ?.let { convertToRunMethodInfo(it) }
         } catch (e: Exception) {
-            System.err.println("代码解析失败: ${e.message}")
-            null
+            throw RuntimeException("代码解析失败: ${e.message}")
         }
     }
 
@@ -110,6 +130,6 @@ fun main() {
         }
     """.trimIndent()
 
-    val result = JavaCodeParser.parseRunMethod(testCode)
-    println(result ?: "未找到有效的 run 方法")
+    val result = Class2ScriptConverter.converter(testCode)
+    println(result)
 }
