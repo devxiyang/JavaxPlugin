@@ -4,10 +4,12 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.PsiManager
 
@@ -84,4 +86,64 @@ class ScriptToClassAction : AnAction() {
 
     // 自定义 VirtualFile 扩展方法
     private fun VirtualFile.nameWithoutExtension(): String = name.substringBeforeLast('.')
+}
+
+class ClassToScriptAction : AnAction() {
+    override fun actionPerformed(event: AnActionEvent) {
+        val project = event.project ?: return
+        val psiFile = event.getData(CommonDataKeys.PSI_FILE) ?: run {
+            Messages.showInfoMessage(project, "请打开一个有效Java文件", "提示")
+            return
+        }
+        val virtualFile = psiFile.virtualFile
+
+        // 获取当前文件所在目录
+        val parentDir = PsiManager.getInstance(project).findDirectory(virtualFile.parent) ?: run {
+            Messages.showErrorDialog(project, "无法获取文件所在目录", "错误")
+            return
+        }
+
+        // 构建新文件名
+        val originalName = virtualFile.nameWithoutExtension
+        val newFileName = "$originalName.javax"
+
+        // 转换代码内容
+        val codeContent = Class2ScriptConverter.convert(psiFile.text)
+
+        WriteCommandAction.runWriteCommandAction(project) {
+            try {
+                // 创建/获取 javax 子目录
+                val javaxSubDir = WriteCommandAction.runWriteCommandAction<PsiDirectory>(project) {
+                    parentDir.findSubdirectory("javax") ?: parentDir.createSubdirectory("javax")
+                }
+
+                // 检查并删除已存在文件
+                javaxSubDir.findFile(newFileName)?.delete()
+
+                // 创建新文件
+                val newFile = PsiFileFactory.getInstance(project)
+                        .createFileFromText(
+                                newFileName,
+                                FileTypeManager.getInstance().getFileTypeByExtension("javax"),
+                                codeContent
+                        )
+
+                // 添加文件到子目录
+                javaxSubDir.add(newFile)
+
+                Messages.showInfoMessage(
+                        project,
+                        "文件已生成到目录: ${javaxSubDir.virtualFile.path}",
+                        "操作成功"
+                )
+            } catch (e: Exception) {
+                Messages.showErrorDialog(
+                        project,
+                        "文件生成失败: ${e.message}",
+                        "错误"
+                )
+            }
+        }
+    }
+
 }

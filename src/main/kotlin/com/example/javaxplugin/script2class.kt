@@ -70,7 +70,7 @@ class CodeConverter(
                                     name = groupValues[2],
                                     argument = groupValues[3],
                                     lineNumber = index + 1,
-                                    argExpr = line
+                                    argExpr = line.split("=")[1]
                             )
                         }
                     }

@@ -30,7 +30,7 @@ data class ParameterInfo(
 
 
 object Class2ScriptConverter {
-    fun converter(javaCode: String): String {
+    fun convert(javaCode: String): String {
         val runMethodInfo = JavaCodeParser.parseRunMethod(javaCode) ?: throw RuntimeException("没有解析出run方法的内容")
 
         val paramsCode = runMethodInfo.parameters.joinToString("\n") { param ->
@@ -92,7 +92,7 @@ object JavaCodeParser {
     private fun extractParamComment(param: Parameter): String {
         return param.comment
                 .map(Comment::getContent)
-                .map { it.replace("""^\s*[/\*]+|[/\*]+\s*${'$'}""".toRegex(), "") }
+//                .map { it.replace("""^\s*[/\*]+|[/\*]+\s*${'$'}""".toRegex(), "") }
                 .orElse("")
     }
 
@@ -117,8 +117,8 @@ fun main() {
              * @param count 循环次数
              */
             public static void run(
-               int count, // 测试注释
-                String message // 
+               int count, // **count
+                String message // asString(**message)
             ) {
                 // 方法逻辑
                 /** 
@@ -130,6 +130,6 @@ fun main() {
         }
     """.trimIndent()
 
-    val result = Class2ScriptConverter.converter(testCode)
+    val result = Class2ScriptConverter.convert(testCode)
     println(result)
 }
