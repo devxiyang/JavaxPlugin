@@ -32,13 +32,13 @@
         <action
                 id="ScriptToClass.ConvertAction"
                 class="com.example.javaxplugin.ScriptToClassAction"
-                text="把 DSL 转为 Java 代码"
+                text="DSL ==> Java"
                 description="Convert current script to Java class with parameter loading">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </action>
         <action id="ClassToScript.ConvertAction"
                 class="com.example.javaxplugin.ClassToScriptAction"
-                text="把Java代码转为DSL"
+                text="Java ==> DSL"
                 description="Convert current java class to script with parameter loading">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </action>

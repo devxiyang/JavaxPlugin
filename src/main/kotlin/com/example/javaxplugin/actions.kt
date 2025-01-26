@@ -79,7 +79,7 @@ class ScriptToClassAction : AnAction() {
 
         Messages.showInfoMessage(
                 project,
-                "文件已生成到包: ${packageName.ifEmpty { "默认包" }}",
+                "",
                 "操作成功"
         )
     }
@@ -133,7 +133,7 @@ class ClassToScriptAction : AnAction() {
 
                 Messages.showInfoMessage(
                         project,
-                        "文件已生成到目录: ${javaxSubDir.virtualFile.path}",
+                        "",
                         "操作成功"
                 )
             } catch (e: Exception) {
